@@ -3,12 +3,12 @@ import { EXAMPLES, isExampleId } from "../examples/index.ts";
 import { Machine, S, assemble, type Program, type StepRecord } from "../emulator/index.ts";
 import { ASSEMBLE_DEBOUNCE_MS, DEFAULT_FILE_NAME, RENDER_EVERY_MS, SPEED_PLAN, TICK_BUDGET_MS, TOAST_MS } from "./constants.ts";
 import { usePrefs } from "./prefs.ts";
-import { CUSTOM_PROGRAM, type ProgramId, type RunMode } from "./types.ts";
+import { CUSTOM_PROGRAM, type AnimationPace, type ProgramId, type RunMode } from "./types.ts";
 
 export const machine = new Machine();
 
 export interface Animator {
-  play: (advance: () => StepRecord | null, done: () => void) => void;
+  play: (advance: () => StepRecord | null, done: () => void, pace: AnimationPace) => void;
   cancel: () => void;
 }
 
@@ -53,6 +53,7 @@ let animator: Animator | null = null;
 let runMode: RunMode = "instant";
 let stepMode: RunMode = "instant";
 let skipBreak = false;
+let runClock: number | null = null;
 let lastRender = 0;
 
 export const registerAnimator = (a: Animator): void => { animator = a; };
@@ -133,15 +134,20 @@ export const useSession = create<Session>()((set, get) => {
     runTimer = null;
     if (!get().running) return;
     if (!animator || machine.finished() || atBreakpoint()) { bump({ running: false }); return; }
+    const perInstruction = SPEED_PLAN[usePrefs.getState().speed].delay, now = performance.now();
+    const start = runClock !== null && runClock > now - perInstruction ? runClock : now;
+    const due = start + perInstruction;
+    runClock = due;
     animator.play(advance, () => {
       if (!get().running || machine.isWaiting()) return;
       if (machine.breakHit || machine.finished()) { bump({ running: false }); return; }
-      runTimer = setTimeout(animatedTick, 0);
-    });
+      runTimer = setTimeout(animatedTick, Math.max(0, due - performance.now()));
+    }, { kind: "run", msPerInstruction: Math.max(1, due - now) });
   };
 
   const resume = (): void => {
     clearRunTimer();
+    runClock = null;
     runTimer = setTimeout(runMode === "animated" ? animatedTick : instantTick, 0);
   };
 
@@ -209,7 +215,7 @@ export const useSession = create<Session>()((set, get) => {
       if (get().running || !ready()) return;
       halt();
       stepMode = mode;
-      if (mode === "animated" && animator) animator.play(advance, () => { bump(); });
+      if (mode === "animated" && animator) animator.play(advance, () => { bump(); }, { kind: "step" });
       else advance();
     },
 

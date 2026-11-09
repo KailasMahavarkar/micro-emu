@@ -125,9 +125,23 @@ const caption = ((await page.locator("[data-caption]").textContent()) ?? "").tri
 process.stdout.write(`board: packets mid-hop ${packets}, caption: ${caption.slice(0, 110)}\n`);
 if (!caption.includes("moves")) bad++;
 
+await page.getByLabel("Example program").selectOption("custom");
+await page.waitForTimeout(150);
+const BOARD_RATES = [["slow", 2], ["normal", 10], ["medium", 20]] as const;
+for (const [speed, perSecond] of BOARD_RATES) {
+  await page.getByRole("button", { name: "Reset" }).click();
+  await page.getByLabel("Run speed").selectOption(speed);
+  await page.getByRole("button", { name: "Run" }).click();
+  await page.waitForTimeout(3000);
+  await page.getByRole("button", { name: "Pause" }).click();
+  const ran = Number(/Steps (\d+)/.exec(await statusText(page))?.[1] ?? "0") / 3;
+  process.stdout.write(`board run at ${speed}: ${ran.toFixed(1)} instructions per second (target ${perSecond})\n`);
+  if (Math.abs(ran - perSecond) > Math.max(0.5, perSecond * 0.05)) bad++;
+}
+await page.getByRole("button", { name: "Reset" }).click();
 await page.getByLabel("Run speed").selectOption("normal");
 await page.getByRole("button", { name: "Run" }).click();
-await page.waitForTimeout(1500);
+await page.waitForTimeout(150);
 const animatedRun = await page.locator(".animate-travel").count();
 await page.getByRole("button", { name: "Pause" }).click();
 const pausedSteps = /Steps \d+/.exec(await statusText(page))?.[0];
