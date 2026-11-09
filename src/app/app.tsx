@@ -9,6 +9,7 @@ import { keyCode } from "../features/screen/screen-layout.ts";
 import { ScreenPanel } from "../features/screen/screen-panel.tsx";
 import { StatusBar } from "../features/status/status-bar.tsx";
 import { Toolbar } from "../features/toolbar/toolbar.tsx";
+import { SPEED_PLAN } from "../session/constants.ts";
 import { usePrefs } from "../session/prefs.ts";
 import { machine, useSession } from "../session/store.ts";
 import type { RunMode, Speed, View } from "../session/types.ts";
@@ -22,10 +23,9 @@ const RIGHT_ROWS: Record<View, string> = {
   panels: "grid-rows-[auto_auto_minmax(0,0.8fr)_minmax(0,1.25fr)]",
   board: "grid-rows-[auto_minmax(0,1fr)]"
 };
-const ANIMATED_RUN_SPEEDS: ReadonlySet<Speed> = new Set(["slow", "normal", "medium"]);
 
 const runModeFor = (view: View): RunMode =>
-  view === "board" && ANIMATED_RUN_SPEEDS.has(usePrefs.getState().speed) ? "animated" : "instant";
+  view === "board" && SPEED_PLAN[usePrefs.getState().speed].animated ? "animated" : "instant";
 const stepModeFor = (view: View): RunMode => (view === "board" ? "animated" : "instant");
 
 const isTypingTarget = (target: EventTarget | null): boolean =>

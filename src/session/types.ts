@@ -1,6 +1,6 @@
 import type { ExampleId } from "../examples/index.ts";
 
-export const SPEEDS = ["slow", "normal", "medium", "fast", "max"] as const;
+export const SPEEDS = ["every5s", "every2s", "one", "slow", "normal", "medium", "fast", "max"] as const;
 export type Speed = (typeof SPEEDS)[number];
 export const CUSTOM_PROGRAM = "custom";
 export type ProgramId = ExampleId | typeof CUSTOM_PROGRAM;

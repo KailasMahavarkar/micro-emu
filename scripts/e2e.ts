@@ -127,7 +127,16 @@ if (!caption.includes("moves")) bad++;
 
 await page.getByLabel("Example program").selectOption("custom");
 await page.waitForTimeout(150);
-const BOARD_RATES = [["slow", 2], ["normal", 10], ["medium", 20]] as const;
+await page.getByRole("button", { name: "Reset" }).click();
+await page.getByLabel("Run speed").selectOption("every5s");
+await page.getByRole("button", { name: "Run" }).click();
+await page.waitForTimeout(1300);
+const crawlPackets = await page.locator(".animate-travel").count();
+await page.screenshot({ path: `${values.out}/react-board-every5s.png` });
+await page.getByRole("button", { name: "Pause" }).click();
+process.stdout.write(`board run at 1 every 5 sec: packet visible after 1.3 s: ${crawlPackets}\n`);
+if (crawlPackets !== 1) bad++;
+const BOARD_RATES = [["one", 1], ["slow", 2], ["normal", 10], ["medium", 20]] as const;
 for (const [speed, perSecond] of BOARD_RATES) {
   await page.getByRole("button", { name: "Reset" }).click();
   await page.getByLabel("Run speed").selectOption(speed);
