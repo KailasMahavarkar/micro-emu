@@ -4,7 +4,7 @@
 
 **Write 8086 assembly, run it, and watch every byte travel across the CPU.**
 
-[![Live](https://img.shields.io/badge/live-8086--emu.pages.dev-FFE45C?style=flat-square&logo=cloudflarepages&logoColor=white&labelColor=1B2430)](https://8086-emu.pages.dev)
+[![Live](https://img.shields.io/badge/live-micro--emu.pages.dev-FFE45C?style=flat-square&logo=cloudflarepages&logoColor=white&labelColor=1B2430)](https://micro-emu.pages.dev)
 [![Single file](https://img.shields.io/badge/ships_as-one_HTML_file-026A60?style=flat-square&labelColor=1B2430)](#-build-and-run-locally)
 [![Hardware tests](https://img.shields.io/badge/SingleStepTests_8088-2.98M_passing-026A60?style=flat-square&labelColor=1B2430)](#-verification)
 [![React 19](https://img.shields.io/badge/React_19-TypeScript-026A60?style=flat-square&logo=react&logoColor=white&labelColor=1B2430)](#-how-it-is-built)
@@ -18,7 +18,7 @@
 
 ## 🚀 Try it
 
-Open **https://8086-emu.pages.dev** (also at https://micro-emu.pages.dev), pick an example, press **Run** or **F10** to step.
+Open **https://micro-emu.pages.dev**, pick an example, press **Run** or **F10** to step.
 
 ## ✨ What it does
 
