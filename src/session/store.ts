@@ -34,6 +34,7 @@ interface SessionActions {
   editSource: (source: string) => void;
   toggleBreakpoint: (line: number) => void;
   runToggle: (mode: RunMode) => void;
+  applySpeed: (mode: RunMode) => void;
   stop: () => void;
   step: (mode: RunMode) => void;
   back: () => void;
@@ -191,6 +192,14 @@ export const useSession = create<Session>()((set, get) => {
       bump();
     },
 
+    applySpeed: mode => {
+      const changed = mode !== runMode;
+      runMode = mode;
+      if (!get().running || machine.isWaiting() || (!changed && mode === "animated")) return;
+      halt();
+      resume();
+    },
+
     stop: () => {
       halt();
       bump({ running: false });
@@ -221,7 +230,7 @@ export const useSession = create<Session>()((set, get) => {
     pressKey: (ascii, scan) => {
       machine.pressKey(ascii, scan);
       const { running, pendingStep } = get();
-      if (running && machine.isWaiting()) { resume(); return; }
+      if (running && machine.isWaiting()) { skipBreak = true; resume(); return; }
       if (pendingStep) { set({ pendingStep: false }); get().step(stepMode); return; }
       bump();
     },

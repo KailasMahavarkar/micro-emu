@@ -28,7 +28,7 @@ Open **https://8086-emu.pages.dev** (also at https://micro-emu.pages.dev), pick 
 | `emu8086.inc` helpers | `print`, `printn`, `putc`, `gotoxy`, `scan_num`, `print_num`, `print_num_uns`, `print_string`, `clear_screen`, written from scratch (the original file is not copied) |
 | CPU | Every documented 8086 instruction, including string ops with `REP`, BCD adjust, far calls and the 8088 quirks the test suite checks |
 | DOS and BIOS | INT 21h (01, 02, 06-09, 0A, 0B, 25, 2A, 2C, 30, 35, 4C), INT 10h (teletype, cursor, scroll, char and attribute, write string), INT 16h, INT 1Ah; video memory at B800h with CGA colours |
-| Debugger | Run at 2, 10, 200 per second or full speed, step, step back (20,000 steps), breakpoints, registers and flags with "changed" marks, stack, memory and listing views |
+| Debugger | Run at 2, 10, 20 (default), 200 per second or full speed, step, step back (20,000 steps), breakpoints, registers and flags with "changed" marks, stack, memory and listing views |
 | Board view | The 8086 as a circuit board: packets carry real values from CS:IP through the address adder, buses, queue, decoder, ALU and memory, with a caption for every move |
 | Teaching help | Assembler errors explain what is wrong, why, and the fix, in English or Hinglish (for example `MUL 5`, two memory operands, `SHL AX, 3`, a jump out of range) |
 | Sharing | Copy a link that carries the program, download or open `.asm` files |
