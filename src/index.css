@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@font-face { font-family: "Geist"; src: url("./assets/fonts/geist-var-latin.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("./assets/fonts/geist-mono-var-latin.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+
+@theme {
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-crt: "DejaVu Sans Mono", "Cascadia Mono", Consolas, "Geist Mono", monospace;
+
+  --color-paper: #F6F4EE;
+  --color-panel: #FFFFFF;
+  --color-sunk: #FAF9F5;
+  --color-ink: #1B2430;
+  --color-muted: #5B6472;
+  --color-line: #E4E0D6;
+  --color-control: #8A8577;
+  --color-primary: #026A60;
+  --color-on-primary: #FFFFFF;
+  --color-active-line: #DFF3EF;
+  --color-mark: #FFE45C;
+  --color-on-mark: #1B2430;
+  --color-error: #A3241A;
+  --color-error-bg: #FCEDEA;
+  --color-warn: #7A4B00;
+  --color-warn-bg: #FFF4D6;
+  --color-syntax-reg: #1D4E89;
+  --color-syntax-num: #8A4B08;
+  --color-syntax-dir: #5B3C88;
+
+  --color-dos: #0B0E12;
+  --color-dos-line: #1C232B;
+  --color-dos-hover: #1A2129;
+  --color-dos-ink: #D6DCE4;
+  --color-dos-muted: #8B95A3;
+  --color-crt-ink: #AAAAAA;
+  --color-crt-cursor: #DDDDDD;
+  --color-modal-frame: #20252B;
+
+  --color-pcb: #0A3426;
+  --color-pcb-hi: #11523D;
+  --color-silk: #E4EFE8;
+  --color-silk-muted: #A8C7B6;
+  --color-copper: #C3864A;
+  --color-copper-deep: #5E3F22;
+  --color-copper-wire: #9C6B3C;
+  --color-inner-wire: #3A434D;
+  --color-inner-bus: #4A5562;
+  --color-later-wire: #6D5A44;
+  --color-chip: #15181C;
+  --color-chip-hi: #1E2329;
+  --color-chip-line: #2C333B;
+  --color-chip-ink: #EEF2F5;
+  --color-chip-muted: #9AA6B2;
+  --color-chip-cell: #0A0C0F;
+  --color-node: #0E1114;
+  --color-unit: #161A1F;
+  --color-device: #1F2328;
+  --color-device-low: #16191D;
+  --color-device-line: #33393F;
+  --color-die-line: #333B45;
+  --color-monitor: #2E343B;
+  --color-monitor-low: #23282E;
+  --color-monitor-line: #3A4148;
+  --color-keycap: #3A4048;
+  --color-keycap-low: #2A2F35;
+  --color-keycap-glow-shadow: #8F7A1F;
+  --color-pin: #B9C0C8;
+
+  --color-cga-0: #000000;
+  --color-cga-1: #0000AA;
+  --color-cga-2: #00AA00;
+  --color-cga-3: #00AAAA;
+  --color-cga-4: #AA0000;
+  --color-cga-5: #AA00AA;
+  --color-cga-6: #AA5500;
+  --color-cga-7: #AAAAAA;
+  --color-cga-8: #555555;
+  --color-cga-9: #5555FF;
+  --color-cga-10: #55FF55;
+  --color-cga-11: #55FFFF;
+  --color-cga-12: #FF5555;
+  --color-cga-13: #FF55FF;
+  --color-cga-14: #FFFF55;
+  --color-cga-15: #FFFFFF;
+  --color-glow: #FFE45C;
+
+  --radius-panel: 12px;
+  --radius-control: 8px;
+  --radius-chip: 6px;
+  --spacing-line: 24px;
+
+  --animate-blink: blink 1s steps(1) infinite;
+  --animate-hit: hit 650ms ease-out;
+  --animate-travel: travel 560ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  --animate-trace: trace 560ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
+
+  @keyframes travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+  @keyframes trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes hit {
+    0% { box-shadow: 0 0 0 0 rgb(255 228 92 / 0.8); }
+    100% { box-shadow: 0 0 0 12px rgb(255 228 92 / 0); }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-paper: #111519;
+    --color-panel: #181D23;
+    --color-sunk: #14191E;
+    --color-ink: #E3E7ED;
+    --color-muted: #9AA3AF;
+    --color-line: #262C34;
+    --color-control: #6B7480;
+    --color-primary: #82D5C8;
+    --color-on-primary: #0B1F1C;
+    --color-active-line: #123630;
+    --color-mark: #E9CC3F;
+    --color-error: #FF9C8F;
+    --color-error-bg: #3A1C19;
+    --color-warn: #F2C46B;
+    --color-warn-bg: #33270F;
+    --color-syntax-reg: #9CC3F5;
+    --color-syntax-num: #E6B07A;
+    --color-syntax-dir: #C7B2EC;
+  }
+}

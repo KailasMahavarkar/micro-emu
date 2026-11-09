@@ -202,3 +202,9 @@ class Decoder {
 }
 
 export const decode = (cpu: Cpu): Instruction => new Decoder(cpu).decode();
+
+export const peek = (cpu: Cpu): Instruction => {
+  const ip = cpu.ip, ins = decode(cpu);
+  cpu.ip = ip;
+  return ins;
+};
