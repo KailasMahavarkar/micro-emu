@@ -8,6 +8,7 @@
 [![Single file](https://img.shields.io/badge/ships_as-one_HTML_file-026A60?style=flat-square&labelColor=1B2430)](#-build-and-run-locally)
 [![Hardware tests](https://img.shields.io/badge/SingleStepTests_8088-2.98M_passing-026A60?style=flat-square&labelColor=1B2430)](#-verification)
 [![No dependencies](https://img.shields.io/badge/runtime_deps-none-026A60?style=flat-square&labelColor=1B2430)](#-how-it-is-built)
+[![License: MIT](https://img.shields.io/badge/license-MIT-026A60?style=flat-square&labelColor=1B2430)](LICENSE)
 
 <img src="media/8086-emu.gif" alt="8086 Lab: values travel across the board view, then a program paints colour into video memory" width="820">
 
@@ -103,4 +104,4 @@ xdg-open index.html  # or open it in any browser
 
 ## 📄 License
 
-Not chosen yet.
+[MIT](LICENSE). Bundled fonts keep their own SIL OFL 1.1 licence.
