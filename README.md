@@ -7,7 +7,7 @@
 [![Live](https://img.shields.io/badge/live-8086--emu.pages.dev-FFE45C?style=flat-square&logo=cloudflarepages&logoColor=white&labelColor=1B2430)](https://8086-emu.pages.dev)
 [![Single file](https://img.shields.io/badge/ships_as-one_HTML_file-026A60?style=flat-square&labelColor=1B2430)](#-build-and-run-locally)
 [![Hardware tests](https://img.shields.io/badge/SingleStepTests_8088-2.98M_passing-026A60?style=flat-square&labelColor=1B2430)](#-verification)
-[![No dependencies](https://img.shields.io/badge/runtime_deps-none-026A60?style=flat-square&labelColor=1B2430)](#-how-it-is-built)
+[![React 19](https://img.shields.io/badge/React_19-TypeScript-026A60?style=flat-square&logo=react&logoColor=white&labelColor=1B2430)](#-how-it-is-built)
 [![License: MIT](https://img.shields.io/badge/license-MIT-026A60?style=flat-square&labelColor=1B2430)](LICENSE)
 
 <img src="media/8086-emu.gif" alt="8086 Lab: values travel across the board view, then a program paints colour into video memory" width="820">
@@ -55,39 +55,41 @@ Tested with Node 24 and Bun 1.4.
 
 ```bash
 bun install
-bun run build        # writes index.html, one self-contained file
-xdg-open index.html  # or open it in any browser
+bun run dev          # Vite dev server
+bun run build        # writes dist/index.html, one self-contained offline file
 ```
 
 | Script | Does |
 |---|---|
-| `bun run build` | Bundles `src/` (CPU, assembler, UI, styles, icons, fonts) into `index.html` |
-| `bun run test` | Examples, assembler round-trip, three-way check against GNU objdump, DOS/BIOS system tests |
-| `bun run test:ui` | Builds, then drives the app in Chromium and checks every board animation against real CPU state |
-| `bun run test:sst` | Streams all 323 SingleStepTests 8088 files (761 MB downloaded, each deleted after its run) |
-
-`bun run test` needs `objdump` from GNU binutils.
+| `bun run check` | Type check, ESLint (strict type-checked, no import cycles) and Vitest |
+| `bun run e2e` | Builds, then drives the app in Chromium: every example, step and step back, errors in both languages, board animation, breakpoints, dark mode |
+| `bun run xcheck -- --seed 7` | Three-way check of assembler and decoder against GNU objdump (needs binutils) |
+| `bun run sst` | Runs all 323 SingleStepTests 8088 files (761 MB downloaded, each deleted after its run); `--files 00.json.gz,F6.6.json.gz` for a subset |
 
 ## 🧩 How it is built
 
+React 19, TypeScript, Vite, Tailwind CSS 4, Zustand and TanStack Router and Virtual. The build inlines scripts, styles and fonts into a single HTML file.
+
 | Path | Role |
 |---|---|
-| `src/core.js` | CPU (decode and execute), two-pass assembler, DOS/BIOS layer, step-back history |
-| `src/app.js` | Editor, panels, CRT screen, board view and its animation planner |
-| `src/examples.js` | The example programs |
-| `src/style.css`, `src/shell.html`, `src/icons.svg`, `src/fonts/` | Look, markup, Hugeicons sprite, Geist fonts |
-| `build.cjs` | Inlines everything (fonts as base64) into one HTML file |
-| `test/` | Test suites, `coverage.asm`, the clip recorder |
+| `src/emulator/` | CPU (`cpu/`), two-pass assembler (`asm/`), DOS/BIOS layer and step-back history (`machine/`), disassembler. Plain TypeScript, no React |
+| `src/session/` | Zustand stores: the running session (program, run loop, breakpoints, keys) and persisted preferences |
+| `src/features/` | `editor`, `registers`, `inspector` (stack, memory, listing), `screen`, `board` (geometry, plan builder, animator), `toolbar`, `status`, `share` |
+| `src/i18n/` | Error and notice text in English and Hinglish, typed so every code has both |
+| `src/ui/` | Button, segmented control, select, panel, `cn` |
+| `src/examples/` | The example programs as `.asm` files |
+| `scripts/` | SingleStepTests runner, objdump cross-check, browser flows |
+
+The URL keeps the view and the example (`?view=board&example=sort`), so a board view can be linked directly.
 
 ## ✅ Verification
 
 | Check | Result |
 |---|---|
 | SingleStepTests 8088 v2, all 323 opcode files, 3,007,000 tests | 2,981,951 pass; the other 25,049 are DIV/IDIV/AAM divide errors where only the undefined flag bits pushed on the stack differ; registers, IP, flags and all other memory match |
-| Assembler and decoder vs GNU objdump, 4 random corpora | 4,504 of 4,504 instructions agree three ways (source, decoder, objdump) |
-| DOS, BIOS, COM/EXE layout, step back + replay | 58 of 58 |
-| Board view vs real CPU state, 71 mnemonics | 1,622 executed instructions, 10,830 moves, no mismatch |
-| Examples in the browser | 8 of 8 produce the expected screen output |
+| Assembler and decoder vs GNU objdump, 4 random corpora | 4,515 of 4,515 instructions agree three ways (source, decoder, objdump) |
+| Vitest | 169 tests: encodings and error codes, DOS/BIOS services, COM/EXE layout, step back and replay for every example, board plan vs real CPU state for every executed instruction |
+| Browser flows (`bun run e2e`) | 8 of 8 examples produce the expected screen output; no page overflow at 1366 x 768; no JS errors |
 
 ## ⚠️ Limits
 
@@ -99,7 +101,7 @@ xdg-open index.html  # or open it in any browser
 ## 🙏 Credits
 
 - CPU checked against [SingleStepTests/8088](https://github.com/SingleStepTests/8088) (MIT), a test suite generated from a real 8088.
-- Icons from [Hugeicons](https://hugeicons.com) free set (MIT); fonts [Geist and Geist Mono](https://github.com/vercel/geist-font) (SIL OFL 1.1, licence in `src/fonts/OFL.txt`).
+- Icons from [Hugeicons](https://hugeicons.com) free set (MIT); fonts [Geist and Geist Mono](https://github.com/vercel/geist-font) (SIL OFL 1.1, licence in `src/assets/fonts/OFL.txt`).
 - Inspired by EMU8086; no code, text or assets from it are used.
 
 ## 📄 License

@@ -4,7 +4,7 @@ export const ASM_ERROR_CODES = [
   "SEG_ALU", "MUL_IMM", "SHIFT_COUNT", "PUSH_IMM", "PUSH_8", "POP_CS", "IO_ACC", "UNKNOWN_MN", "NO_CODE"
 ] as const;
 export type AsmErrorCode = (typeof ASM_ERROR_CODES)[number];
-export type MessageArgs = Readonly<Record<string, string | number>>;
+export type MessageArgs = Readonly<Partial<Record<string, string | number>>>;
 
 export interface AsmDiagnostic {
   line: number;

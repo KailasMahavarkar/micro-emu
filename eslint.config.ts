@@ -1,15 +1,19 @@
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import importX from "eslint-plugin-import-x";
+import reactHooks from "eslint-plugin-react-hooks";
+import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["legacy/**", "dist/**", "node_modules/**", "index.html"] },
+  { ignores: ["legacy/**", "dist/**", "node_modules/**"] },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
+  reactHooks.configs.flat["recommended-latest"],
   {
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
     plugins: { "import-x": importX },
+    settings: { "import-x/resolver-next": [createTypeScriptImportResolver()] },
     rules: {
       "import-x/no-cycle": "error",
       "@typescript-eslint/no-explicit-any": "error",
