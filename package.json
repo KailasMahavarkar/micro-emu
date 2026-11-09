@@ -1,0 +1,14 @@
+{
+  "name": "micro-emu",
+  "private": true,
+  "description": "8086 Lab: an 8086 emulator, assembler and board view in one HTML file",
+  "scripts": {
+    "build": "node build.cjs",
+    "test": "node test/run-examples.cjs && node test/asm-roundtrip.cjs && node test/objdump-xcheck.cjs && node test/system.cjs",
+    "test:ui": "node build.cjs && node test/ui.cjs /tmp && node test/board-check.cjs",
+    "test:sst": "node --max-old-space-size=6000 test/sst-full.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
