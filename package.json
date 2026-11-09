@@ -1,14 +1,28 @@
 {
   "name": "micro-emu",
   "private": true,
+  "type": "module",
   "description": "8086 Lab: an 8086 emulator, assembler and board view in one HTML file",
+  "license": "MIT",
   "scripts": {
-    "build": "node build.cjs",
-    "test": "node test/run-examples.cjs && node test/asm-roundtrip.cjs && node test/objdump-xcheck.cjs && node test/system.cjs",
-    "test:ui": "node build.cjs && node test/ui.cjs /tmp && node test/board-check.cjs",
-    "test:sst": "node --max-old-space-size=6000 test/sst-full.cjs"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "bun run typecheck && bun run lint && bun run test",
+    "sst": "bun scripts/sst.ts",
+    "xcheck": "bun scripts/objdump-xcheck.ts",
+    "build:legacy": "node legacy/build.cjs"
   },
   "devDependencies": {
-    "playwright": "1.63.0"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.14.0",
+    "eslint-plugin-import-x": "^4.18.1",
+    "jiti": "^2.7.0",
+    "playwright": "1.63.0",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }
