@@ -1,0 +1,6 @@
+node_modules/
+index.html
+dist/
+.wrangler/
+media/raw/
+test/sst/*.json.gz
