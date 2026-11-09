@@ -38,6 +38,10 @@ export function App() {
   const onRun = (): void => { useSession.getState().runToggle(runModeFor(view)); };
   const onStep = (): void => { useSession.getState().step(stepModeFor(view)); };
   const onBack = (): void => { useSession.getState().back(); };
+  const onSpeed = (speed: Speed): void => {
+    usePrefs.getState().setSpeed(speed);
+    useSession.getState().applySpeed(runModeFor(view));
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -61,7 +65,7 @@ export function App() {
 
   return (
     <div className="grid h-dvh grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden max-[960px]:h-auto max-[960px]:overflow-visible">
-      <Toolbar onRun={onRun} onStep={onStep} onBack={onBack} />
+      <Toolbar onRun={onRun} onStep={onStep} onBack={onBack} onSpeed={onSpeed} />
       <main className="grid min-h-0 grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] gap-3 px-4 pb-3 max-[960px]:grid-cols-1">
         <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)] max-[960px]:h-[70vh]">
           <EditorPanel />

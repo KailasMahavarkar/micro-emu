@@ -5,7 +5,7 @@ import { LANGS, type Lang } from "../../i18n/types.ts";
 import { SPEED_PLAN } from "../../session/constants.ts";
 import { usePrefs } from "../../session/prefs.ts";
 import { isRunnable, machine, useSession } from "../../session/store.ts";
-import { CUSTOM_PROGRAM, SPEEDS, type ProgramId } from "../../session/types.ts";
+import { CUSTOM_PROGRAM, SPEEDS, type ProgramId, type Speed } from "../../session/types.ts";
 import { Button, Segmented, SelectField } from "../../ui/index.ts";
 
 const PROGRAM_OPTIONS: readonly { value: ProgramId; label: string }[] = [
@@ -22,16 +22,17 @@ export interface ToolbarProps {
   onRun: () => void;
   onStep: () => void;
   onBack: () => void;
+  onSpeed: (speed: Speed) => void;
 }
 
-export function Toolbar({ onRun, onStep, onBack }: ToolbarProps) {
+export function Toolbar({ onRun, onStep, onBack, onSpeed }: ToolbarProps) {
   const programId = useSession(s => s.programId);
   const program = useSession(s => s.program);
   const running = useSession(s => s.running);
   const chooseProgram = useSession(s => s.chooseProgram);
   const reset = useSession(s => s.reset);
   useSession(s => s.tick);
-  const { speed, setSpeed, lang, setLang } = usePrefs();
+  const { speed, lang, setLang } = usePrefs();
   const ok = isRunnable(program);
 
   return (
@@ -55,7 +56,7 @@ export function Toolbar({ onRun, onStep, onBack }: ToolbarProps) {
           <span className={LABEL}>Reset</span>
         </Button>
       </div>
-      <SelectField icon={DashboardSpeed01Icon} aria-label="Run speed" title="Run speed" value={speed} options={SPEED_OPTIONS} onChange={setSpeed} />
+      <SelectField icon={DashboardSpeed01Icon} aria-label="Run speed" title="Run speed" value={speed} options={SPEED_OPTIONS} onChange={onSpeed} />
       <div className="flex-1" />
       <Segmented label="Explanation language" icon={LanguageSkillIcon} options={LANG_OPTIONS} value={lang} onChange={setLang} />
     </header>

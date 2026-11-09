@@ -29,9 +29,40 @@ const base = values.url ?? `${ORIGIN}/`;
 await page.goto(base);
 await page.evaluate(() => { localStorage.clear(); });
 await page.goto(base);
-await page.getByLabel("Run speed").selectOption("max");
+await page.locator("footer").waitFor();
 
 let bad = 0;
+const speedSelect = page.getByLabel("Run speed");
+const defaultSpeed = await speedSelect.inputValue();
+const backDisabled = await page.getByRole("button", { name: "Step back" }).isDisabled();
+await page.getByLabel("Example program").selectOption("custom");
+await page.getByLabel("Assembly source code").fill("org 100h\n    mov cx, 0FFFFh\nspin:\n    loop spin\n    ret\n");
+await page.waitForTimeout(400);
+await page.getByRole("button", { name: "Run" }).click();
+await page.waitForTimeout(3000);
+await page.getByRole("button", { name: "Pause" }).click();
+const steps3s = Number(/Steps ([\d,]+)/.exec(await statusText(page))?.[1]?.replace(/,/g, "") ?? "0");
+await page.getByRole("button", { name: "Reset" }).click();
+const afterReset = await statusText(page);
+process.stdout.write(`toolbar: default speed ${defaultSpeed}, step back disabled at start ${backDisabled}, ${steps3s} steps in 3 s, after reset "${afterReset.slice(0, 40)}"\n`);
+if (defaultSpeed !== "medium" || !backDisabled || steps3s < 50 || steps3s > 66 || !afterReset.includes("Ready") || !afterReset.includes("Steps 0")) bad++;
+
+const migrated = await browser.newPage({ viewport: VIEWPORT });
+if (!values.url) await migrated.route(`${ORIGIN}/**`, route => route.fulfill({ contentType: "text/html", body: HTML }));
+await migrated.goto(base);
+await migrated.evaluate(() => { localStorage.setItem("lab8086.prefs", JSON.stringify({ state: { speed: "fast", lang: "en" }, version: 0 })); });
+await migrated.goto(base);
+await migrated.locator("footer").waitFor();
+const migratedSpeed = await migrated.getByLabel("Run speed").inputValue();
+process.stdout.write(`old saved 200 / sec opens as: ${migratedSpeed}\n`);
+if (migratedSpeed !== "medium") bad++;
+await migrated.close();
+await page.bringToFront();
+
+await page.getByLabel("Example program").selectOption("factorial");
+await page.getByLabel("Example program").selectOption("hello");
+await speedSelect.selectOption("max");
+
 for (const [id, want] of Object.entries(EXPECT)) {
   await page.getByLabel("Example program").selectOption(id);
   await page.waitForTimeout(150);
@@ -57,6 +88,15 @@ await page.keyboard.press("Shift+F10");
 const afterBack = /Steps \d+/.exec(await statusText(page))?.[0];
 process.stdout.write(`step/back: ${afterSteps ?? "-"} -> ${afterBack ?? "-"}\n`);
 if (afterSteps !== "Steps 7" || afterBack !== "Steps 6") bad++;
+await speedSelect.selectOption("slow");
+await page.keyboard.press("F5");
+await page.waitForTimeout(1100);
+const f5Running = await statusText(page);
+await page.keyboard.press("F5");
+const f5Paused = await statusText(page);
+process.stdout.write(`F5: "${f5Running.slice(0, 7)}" then "${f5Paused.slice(0, 6)}"\n`);
+if (!f5Running.startsWith("Running") || !f5Paused.startsWith("Paused")) bad++;
+await speedSelect.selectOption("max");
 await page.screenshot({ path: `${values.out}/react-panels.png` });
 
 await page.getByLabel("Assembly source code").fill("org 100h\n    mul 5\n    mov [bx], [si]\n    ret\n");
