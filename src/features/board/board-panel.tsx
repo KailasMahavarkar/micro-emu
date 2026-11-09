@@ -40,7 +40,7 @@ export function BoardPanel() {
     <Panel>
       <PanelHeader icon={CircuitBoardIcon} title="Board">
         <span className="ml-auto flex items-center gap-3 text-xs font-normal text-muted [&_label]:inline-flex [&_label]:cursor-pointer [&_label]:items-center [&_label]:gap-2">
-          <label title="How fast values travel">Speed
+          <label title="How fast values travel when you Step. Run follows the run speed.">Step speed
             <input type="range" min={BOARD_SPEED.min} max={BOARD_SPEED.max} step={BOARD_SPEED.step} value={boardSpeed}
               onChange={e => { setBoardSpeed(Number(e.target.value)); }} className="w-24 accent-primary" />
           </label>

@@ -9,4 +9,5 @@ export type View = (typeof VIEWS)[number];
 export const INSPECTOR_TABS = ["stack", "memory", "listing"] as const;
 export type InspectorTab = (typeof INSPECTOR_TABS)[number];
 export type RunMode = "instant" | "animated";
+export type AnimationPace = { kind: "step" } | { kind: "run"; msPerInstruction: number };
 export type RunState = "problems" | "waiting" | "running" | "finished" | "stopped" | "paused" | "ready";

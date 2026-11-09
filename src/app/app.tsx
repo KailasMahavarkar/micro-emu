@@ -22,7 +22,7 @@ const RIGHT_ROWS: Record<View, string> = {
   panels: "grid-rows-[auto_auto_minmax(0,0.8fr)_minmax(0,1.25fr)]",
   board: "grid-rows-[auto_minmax(0,1fr)]"
 };
-const ANIMATED_RUN_SPEEDS: ReadonlySet<Speed> = new Set(["slow", "normal"]);
+const ANIMATED_RUN_SPEEDS: ReadonlySet<Speed> = new Set(["slow", "normal", "medium"]);
 
 const runModeFor = (view: View): RunMode =>
   view === "board" && ANIMATED_RUN_SPEEDS.has(usePrefs.getState().speed) ? "animated" : "instant";

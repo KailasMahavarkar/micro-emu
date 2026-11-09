@@ -5,13 +5,12 @@ import { machine, registerAnimator, useSession } from "../../session/store.ts";
 import { capture, finalView, isHop, viewState } from "./board-model.ts";
 import { pathD, route } from "./geometry.ts";
 import { buildPlan } from "./plan.ts";
+import { PAUSE_MS, timeline } from "./timeline.ts";
+import type { AnimationPace } from "../../session/types.ts";
 import type { BoardNode, Capture, PlanItem, ViewState } from "./types.ts";
 
-export const HOP_MS = 560;
-const HOP_GAP_MS = 80;
-const PAUSE_MS = 280;
-const CAPTION_ONLY_MS = 700;
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+const REDUCED_MOTION_PAUSE_MS = 2 * PAUSE_MS;
 
 export interface ActiveHop { id: number; label: string; d: string; ms: number }
 export interface Caption { count: string; text: string }
@@ -41,7 +40,7 @@ const cancel = (): void => {
   useBoard.setState({ live: null, hop: null, caption: null });
 };
 
-const play = (advance: () => ReturnType<typeof machine.step>, done: () => void): void => {
+const play = (advance: () => ReturnType<typeof machine.step>, done: () => void, pace: AnimationPace): void => {
   cancel();
   const program = useSession.getState().program, prefs = usePrefs.getState();
   const before = capture(machine, program, nextLength());
@@ -49,39 +48,37 @@ const play = (advance: () => ReturnType<typeof machine.step>, done: () => void):
   if (!record || machine.isWaiting()) { done(); return; }
   const after = capture(machine, program, nextLength());
   const plan = buildPlan({ ins: record.ins, values: record.values, before, after, cpu: machine.cpu, notice: machine.notice?.code ?? null, showFetch: prefs.showFetch });
-  const speed = prefs.boardSpeed, hopMs = HOP_MS / speed, gapMs = HOP_GAP_MS / speed;
   const later = (at: number, fn: () => void): void => { timers.push(setTimeout(fn, at)); };
   useBoard.setState({ last: { plan, before, after, ins: record.ins, steps: machine.steps }, trails: [] });
+  const steps = plan.filter(item => !("instant" in item));
+  const { slots, end, pause } = timeline(steps.map(item => (isHop(item) ? "hop" : "note")), pace, prefs.boardSpeed);
 
   if (reducedMotion()) {
     useBoard.setState({ trails: plan.filter(isHop).map(h => pathD(route(h.from, h.to))) });
-    later(2 * PAUSE_MS, done);
+    later(pace.kind === "run" ? end : REDUCED_MOTION_PAUSE_MS, done);
     return;
   }
 
   const vs = viewState(before);
   plan.forEach(item => { if ("instant" in item) item.instant(vs); });
   useBoard.setState({ live: snapshotOf(vs) });
-  const steps = plan.filter(item => !("instant" in item));
-  let t = 0;
   steps.forEach((item, i) => {
-    const count = `${i + 1}/${steps.length}`;
+    const count = `${i + 1}/${steps.length}`, { start, travel } = slots[i];
     if (!isHop(item)) {
-      if ("text" in item) later(t, () => { useBoard.setState({ caption: { count, text: item.text } }); });
-      t += CAPTION_ONLY_MS / speed;
+      if ("text" in item) later(start, () => { useBoard.setState({ caption: { count, text: item.text } }); });
       return;
     }
     const d = pathD(route(item.from, item.to)), id = ++sequence;
-    later(t, () => { useBoard.setState({ caption: { count, text: item.text }, hop: { id, label: item.label, d, ms: hopMs } }); });
-    later(t + hopMs, () => {
+    later(start, () => { useBoard.setState({ caption: { count, text: item.text }, hop: { id, label: item.label, d, ms: travel } }); });
+    later(start + travel, () => {
       item.apply?.(vs);
       useBoard.setState(s => ({ hop: null, live: snapshotOf(vs), trails: [...s.trails, d], hit: { node: item.to, id } }));
     });
-    t += hopMs + gapMs;
   });
-  later(t, () => {
+  later(end, () => {
     useBoard.setState({ live: null, hop: null, caption: null });
-    later(PAUSE_MS / speed, done);
+    if (pause > 0) later(pause, done);
+    else done();
   });
 };
 
