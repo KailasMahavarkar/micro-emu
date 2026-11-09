@@ -6,7 +6,7 @@ const FETCH_AND_MOV: SlotKind[] = ["hop", "hop", "hop", "hop", "hop"];
 const WITH_NOTE: SlotKind[] = ["hop", "hop", "hop", "hop", "note"];
 
 describe("board timeline", () => {
-  it.each([["slow", 2], ["normal", 10], ["medium", 20]] as const)("fits one instruction into 1/%s second when running (%i per second)", (speed, perSecond) => {
+  it.each([["every5s", 0.2], ["every2s", 0.5], ["one", 1], ["slow", 2], ["normal", 10], ["medium", 20]] as const)("fits one %s instruction into its share of a second when running (%f per second)", (speed, perSecond) => {
     const msPerInstruction = SPEED_PLAN[speed].delay;
     for (const kinds of [FETCH_AND_MOV, WITH_NOTE, ["hop"] as SlotKind[]]) {
       const t = timeline(kinds, { kind: "run", msPerInstruction }, 1);

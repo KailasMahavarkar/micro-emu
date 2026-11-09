@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SPEED_PLAN } from "./constants.ts";
 import { usePrefs } from "./prefs.ts";
 import { machine, useSession } from "./store.ts";
-import { CUSTOM_PROGRAM, type Speed } from "./types.ts";
+import { CUSTOM_PROGRAM, SPEEDS, type Speed } from "./types.ts";
 
 const LOOP = "org 100h\n    mov cx, 0FFFFh\nspin:\n    loop spin\n    ret\n";
 const KEY_READ = "org 100h\n    mov ah, 8\n    int 21h\n    mov ah, 4Ch\n    int 21h\n";
@@ -28,13 +28,22 @@ describe("speed", () => {
     expect(SPEED_PLAN.medium.label).toBe("20 / sec");
   });
 
-  it.each([["slow", 2], ["normal", 10], ["medium", 20]] as const)("runs %s at about %i instructions per second", (speed: Speed, perSecond: number) => {
-    usePrefs.setState({ speed });
-    load(LOOP);
-    session().runToggle("instant");
-    vi.advanceTimersByTime(3000);
-    expect(machine.steps / 3).toBeGreaterThanOrEqual(perSecond - 1);
-    expect(machine.steps / 3).toBeLessThanOrEqual(perSecond + 1);
+  it.each([["every5s", 0.2], ["every2s", 0.5], ["one", 1], ["slow", 2], ["normal", 10], ["medium", 20]] as const)(
+    "runs %s at about %f instructions per second",
+    (speed: Speed, perSecond: number) => {
+      const seconds = 20;
+      usePrefs.setState({ speed });
+      load(LOOP);
+      session().runToggle("instant");
+      vi.advanceTimersByTime(seconds * 1000);
+      expect(machine.steps / seconds).toBeGreaterThanOrEqual(perSecond * 0.9);
+      expect(machine.steps / seconds).toBeLessThanOrEqual(perSecond * 1.1 + 1 / seconds);
+    }
+  );
+
+  it("lists the slow speeds first, slowest at the top, and animates the board up to 20 / sec", () => {
+    expect(SPEEDS.map(s => SPEED_PLAN[s].label)).toEqual(["1 every 5 sec", "1 every 2 sec", "1 / sec", "2 / sec", "10 / sec", "20 / sec", "200 / sec", "Full speed"]);
+    expect(SPEEDS.filter(s => SPEED_PLAN[s].animated)).toEqual(["every5s", "every2s", "one", "slow", "normal", "medium"]);
   });
 
   it("runs 200 / sec far faster than 20 / sec", () => {
