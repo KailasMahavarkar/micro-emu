@@ -1,5 +1,21 @@
-const { assemble, CPU, disasm } = require("../src/core.js");
-const cases = [
+import { describe, expect, it } from "vitest";
+import { Cpu } from "../cpu/cpu.ts";
+import { decode } from "../cpu/decode.ts";
+import { S } from "../cpu/registers.ts";
+import { disasm } from "../disasm.ts";
+import { COM_ORIGIN, LOAD_SEG } from "../layout.ts";
+import { build, run, screenRows } from "../test-kit.ts";
+import { assemble } from "./assemble.ts";
+import type { AsmErrorCode } from "./errors.ts";
+
+const hexBytes = (bytes: Iterable<number>): string => [...bytes].map(b => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+const comCode = (src: string): Uint8Array => {
+  const p = assemble(`org 100h\n${src}\n`);
+  expect(p.errors).toEqual([]);
+  return p.segments[0].bytes.slice(COM_ORIGIN);
+};
+
+const ENCODINGS: [string, string, string][] = [
   ["mov ax, bx", "MOV AX, BX", "8B C3"], ["mov al, 5", "MOV AL, 5", "B0 05"], ["mov cx, 1234h", "MOV CX, 1234h", "B9 34 12"],
   ["mov [bx], al", "MOV [BX], AL", "88 07"], ["mov ax, [bx+si+4]", "MOV AX, [BX+SI+04h]", "8B 40 04"],
   ["mov ax, [bp]", "MOV AX, [BP]", "8B 46 00"], ["mov byte ptr [di], 7", "MOV BYTE PTR [DI], 7", "C6 05 07"],
@@ -28,40 +44,83 @@ const cases = [
   ["ret", "RET", "C3"], ["ret 4", "RET 0004h", "C2 04 00"], ["retf", "RETF", "CB"], ["iret", "IRET", "CF"],
   ["call bx", "CALL BX", "FF D3"], ["jmp word ptr [bx]", "JMP WORD PTR [BX]", "FF 27"]
 ];
-let bad = 0;
-for (const [src, want, bytes] of cases) {
-  const prog = assemble(`org 100h\n${src}\n`);
-  if (prog.errors.length) { console.log("ASM ERROR", src, JSON.stringify(prog.errors)); bad++; continue; }
-  const seg = prog.segments[0], code = [...seg.bytes.slice(0x100)];
-  const got = code.map(b => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
-  const c = new CPU(); c.s[1] = 0x700; c.ip = 0x100; code.forEach((b, i) => { c.mem[0x7100 + i] = b; });
-  const text = disasm(c.decode());
-  if (text !== want || got !== bytes) { bad++; console.log(`MISMATCH ${src.padEnd(26)} bytes ${got.padEnd(18)} want ${bytes.padEnd(18)} | ${text} want ${want}`); }
-}
-const jumps = assemble(`org 100h
-start: nop
-  jmp start
-  jz start
-  loop start
-  call far_away
-  jmp far_away
-  nop
-far_away: ret
-`);
-const j = [...jumps.segments[0].bytes.slice(0x100)].map(b => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
-const jWant = "90 EB FD 74 FB E2 F9 E8 04 00 E9 01 00 90 C3";
-if (j !== jWant) { bad++; console.log("JUMPS", j, "want", jWant); }
-const errs = [
+
+const ERRORS: [string, AsmErrorCode][] = [
   ["mov [bx], [si]", "TWO_MEM"], ["mov ds, 1234h", "SEG_IMM"], ["mul 5", "MUL_IMM"], ["shl ax, 3", "SHIFT_COUNT"], ["push 5", "PUSH_IMM"],
   ["push al", "PUSH_8"], ["mov ax, bl", "SIZE_MISMATCH"], ["mov [bx], 5", "SIZE_UNKNOWN"], ["mov ax, [ax]", "BAD_ADDR"], ["mov ax, [si+di]", "BAD_ADDR"],
   ["movv ax, 1", "UNKNOWN_MN"], ["jmp nowhere", "UNKNOWN_SYM"], ["mov al, 300", "IMM_RANGE"], ["mov cs, ax", "MOV_CS"], ["mov es, ds", "SEG_SEG"]
 ];
-for (const [src, code] of errs) {
-  const p = assemble(`org 100h\n${src}\n`);
-  const got = p.errors.map(e => e.code).join(",");
-  if (got !== code) { bad++; console.log(`ERRCODE ${src.padEnd(20)} got ${got || "-"} want ${code}`); }
-}
-const far = assemble(`org 100h\nstart: jz target\n${"nop\n".repeat(200)}target: ret\n`);
-if (far.errors[0]?.code !== "JUMP_RANGE") { bad++; console.log("JUMP_RANGE not detected", JSON.stringify(far.errors)); }
-console.log(bad ? `${bad} problems` : `all ${cases.length} encodings, jump layout, ${errs.length + 1} error checks ok`);
-process.exit(bad ? 1 : 0);
+
+describe("assembler", () => {
+  it.each(ENCODINGS)("encodes %s and disassembles it back", (src, text, bytes) => {
+    const code = comCode(src), cpu = new Cpu();
+    expect(hexBytes(code)).toBe(bytes);
+    cpu.s[S.CS] = LOAD_SEG;
+    cpu.ip = COM_ORIGIN;
+    cpu.mem.set(code, (LOAD_SEG << 4) + COM_ORIGIN);
+    expect(disasm(decode(cpu))).toBe(text);
+  });
+
+  it("picks short and near jump forms by distance and direction", () => {
+    const code = comCode("start: nop\n  jmp start\n  jz start\n  loop start\n  call far_away\n  jmp far_away\n  nop\nfar_away: ret");
+    expect(hexBytes(code)).toBe("90 EB FD 74 FB E2 F9 E8 04 00 E9 01 00 90 C3");
+  });
+
+  it.each(ERRORS)("reports %s as %s", (src, code) => {
+    expect(assemble(`org 100h\n${src}\n`).errors.map(e => e.code)).toEqual([code]);
+  });
+
+  it("reports a conditional jump that cannot reach its label", () => {
+    const p = assemble(`org 100h\nstart: jz target\n${"nop\n".repeat(200)}target: ret\n`);
+    expect(p.errors[0]?.code).toBe("JUMP_RANGE");
+  });
+
+  it("lays out $, EQU, DUP, DW, DD, LABEL and turns RET inside PROC FAR into RETF", () => {
+    const p = assemble(`org 100h
+msg db 'Hi there'
+len equ $ - msg
+tbl db 2 dup(1, 2 dup(9))
+w dw tbl, -1
+dd1 dd 12345678h
+arr label byte
+    db 7
+start:
+    mov cx, len
+    mov al, arr
+    mov bx, offset w
+    mov dx, seg msg
+    jmp short done
+    nop
+done:
+    call far_proc
+    ret
+far_proc proc far
+    ret
+far_proc endp`);
+    expect(p.errors).toEqual([]);
+    const b = [...p.segments[0].bytes.slice(COM_ORIGIN)];
+    expect(b.slice(8, 14)).toEqual([1, 9, 9, 1, 9, 9]);
+    expect(b.slice(14, 18)).toEqual([0x08, 0x01, 0xFF, 0xFF]);
+    expect(b.slice(18, 22)).toEqual([0x78, 0x56, 0x34, 0x12]);
+    expect(b[b.indexOf(0xB9) + 1]).toBe(8);
+    expect(b.slice(-2)).toEqual([0xC3, 0xCB]);
+  });
+
+  it("expands a macro with LOCAL labels twice and the emu8086.inc PRINTN helper", () => {
+    const { m } = build(`include 'emu8086.inc'
+org 100h
+twice macro x
+    local again
+again:
+    add ax, x
+    add ax, x
+endm
+    twice 2
+    twice 3
+    printn 'ok'
+    ret`);
+    run(m);
+    expect(m.cpu.r[0]).toBe(10);
+    expect(screenRows(m)[0]).toBe("ok");
+  });
+});

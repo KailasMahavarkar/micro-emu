@@ -3,4 +3,4 @@ index.html
 dist/
 .wrangler/
 media/raw/
-test/sst/*.json.gz
+scripts/sst/*.json.gz
